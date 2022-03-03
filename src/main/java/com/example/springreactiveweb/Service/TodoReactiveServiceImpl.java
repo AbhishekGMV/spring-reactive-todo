@@ -1,9 +1,7 @@
 package com.example.springreactiveweb.Service;
 
 import com.example.springreactiveweb.Model.Todo;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -40,12 +38,12 @@ public class TodoReactiveServiceImpl implements TodoReactiveService {
     }
 
     @Override
-    public Mono<ResponseEntity<Todo>> getTodo(String id) {
+    public Mono<Todo> getTodo(String id) {
         return webClient.get().uri("/{id}", id)
                 .retrieve()
-                .bodyToMono(Todo.class).log()
-                .map((item) -> new ResponseEntity<>(item, HttpStatus.OK))
-                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .bodyToMono(Todo.class).log();
+//                .map((item) -> new ResponseEntity<>(item, HttpStatus.OK))
+//                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     public Mono<Todo> addTask(Todo task) {
@@ -57,6 +55,7 @@ public class TodoReactiveServiceImpl implements TodoReactiveService {
                 .bodyValue(task)
                 .exchangeToMono(clientResponse ->
                         clientResponse.bodyToMono(Todo.class)
-                        .log());
+                                .onErrorReturn(new Todo(99999, "Error", false))
+                                .log());
     }
 }

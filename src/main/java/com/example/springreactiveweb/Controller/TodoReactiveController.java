@@ -3,7 +3,6 @@ package com.example.springreactiveweb.Controller;
 import com.example.springreactiveweb.Model.Todo;
 import com.example.springreactiveweb.Service.TodoReactiveServiceImpl;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,12 +26,12 @@ public class TodoReactiveController {
     }
 
     @GetMapping(value = "/todo/mono/{id}")
-    public Mono<ResponseEntity<Todo>> getMonoTodo(@PathVariable String id) {
+    public Mono<Todo> getMonoTodo(@PathVariable String id) {
         return todoReactiveService.getTodo(id);
     }
 
     @PostMapping(value = "/todo/add")
-    public Mono<Todo> addTask(@RequestBody Todo task){
+    public Mono<Todo> addTask(@RequestBody Todo task) {
         return todoReactiveService.addTask(task);
     }
 }
