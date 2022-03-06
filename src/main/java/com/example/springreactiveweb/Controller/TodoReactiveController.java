@@ -15,7 +15,7 @@ public class TodoReactiveController {
         this.todoReactiveService = todoReactiveService;
     }
 
-    @GetMapping(value = "/todo/flux", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/todo/all", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<Todo> getTodoList() {
         return todoReactiveService.getTodoList();
     }
@@ -25,8 +25,8 @@ public class TodoReactiveController {
         return todoReactiveService.getPendingTodoList();
     }
 
-    @GetMapping(value = "/todo/mono/{id}")
-    public Mono<Todo> getMonoTodo(@PathVariable String id) {
+    @GetMapping(value = "/todo/{id}")
+    public Mono<Todo> getMonoTodo(@PathVariable int id) {
         return todoReactiveService.getTodo(id);
     }
 

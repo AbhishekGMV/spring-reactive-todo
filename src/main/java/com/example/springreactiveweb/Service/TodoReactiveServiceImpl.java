@@ -8,11 +8,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.function.Function;
 
 @Service
 public class TodoReactiveServiceImpl implements TodoReactiveService {
 
-    private final WebClient webClient;
+    private WebClient webClient;
 
     TodoReactiveServiceImpl(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.baseUrl("http://localhost:8081/todo").build();
@@ -29,19 +30,30 @@ public class TodoReactiveServiceImpl implements TodoReactiveService {
 
     @Override
     public Flux<Todo> getPendingTodoList() {
-        return webClient.get().uri("/")
+        Function<Flux<Todo>, Flux<Todo>> filterData =
+                data -> data.filter(todo -> !todo.isComplete());
+
+        Flux<Todo> pendingTodo = webClient.get().uri("/")
                 .retrieve()
                 .bodyToFlux(Todo.class)
                 .flatMap(Flux::just)
-                .filter(todo -> !todo.isComplete())
+//                .filter(todo -> !todo.isComplete())
+                .transform(filterData)
+                .doOnNext(task -> System.out.println("task = " + task))
+                .doOnSubscribe(subscription -> System.out.println(subscription+" subscribed"))
+                .doOnComplete(() -> System.out.println("Complete!"))
                 .log();
+        pendingTodo.subscribe(sub -> System.out.println("sub = " + sub));
+        return pendingTodo;
     }
 
     @Override
-    public Mono<Todo> getTodo(String id) {
+    public Mono<Todo> getTodo(int id) {
         return webClient.get().uri("/{id}", id)
                 .retrieve()
-                .bodyToMono(Todo.class).log();
+                .bodyToMono(Todo.class)
+                .onErrorMap(throwable -> new RuntimeException("Some error occurred"))
+                .log();
 //                .map((item) -> new ResponseEntity<>(item, HttpStatus.OK))
 //                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
@@ -55,7 +67,7 @@ public class TodoReactiveServiceImpl implements TodoReactiveService {
                 .bodyValue(task)
                 .exchangeToMono(clientResponse ->
                         clientResponse.bodyToMono(Todo.class)
-                                .onErrorReturn(new Todo(99999, "Error", false))
+//                                .onErrorReturn(new Todo(99999, "Error", false))
                                 .log());
     }
 }

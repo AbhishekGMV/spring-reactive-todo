@@ -9,7 +9,7 @@ public interface TodoReactiveService {
 
     Flux<Todo> getPendingTodoList();
 
-    Mono<Todo> getTodo(String id);
+    Mono<Todo> getTodo(int id);
 
     Mono<Todo> addTask(Todo task);
 }
