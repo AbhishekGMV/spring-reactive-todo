@@ -3,8 +3,10 @@ package com.example.springreactiveweb.Service;
 import com.example.springreactiveweb.Model.Todo;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Subscription;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -57,6 +59,43 @@ class TodoReactiveServiceImplTest {
                 .bodyToFlux(Todo.class)
                 .flatMap(Flux::just)
                 .filter(task -> !task.isComplete()).log();
-        StepVerifier.create(todo).expectNextCount(2).verifyComplete();
+        StepVerifier.create(todo).expectNextCount(1).verifyComplete();
+    }
+
+    @Test
+    void testBackPressure() {
+        var todoFlux = Flux.range(1, 100).log();
+
+        todoFlux
+                .onBackpressureDrop(value -> System.out.println("Dropped = " + value))
+//                .onBackpressureBuffer(10)
+                .onBackpressureError()
+                .subscribe(new BaseSubscriber<Integer>() {
+                    @Override
+                    protected void hookOnSubscribe(Subscription subscription) {
+                        request(5);
+                    }
+
+                    @Override
+                    protected void hookOnNext(Integer value) {
+                        System.out.println("value = " + value);
+                        if (value == 5) hookOnCancel();
+                    }
+
+                    @Override
+                    protected void hookOnComplete() {
+                        System.out.println("Completed!");
+                    }
+
+                    @Override
+                    protected void hookOnError(Throwable throwable) {
+                        System.out.println("throwable = " + throwable);
+                    }
+
+                    @Override
+                    protected void hookOnCancel() {
+                        super.hookOnCancel();
+                    }
+                });
     }
 }
